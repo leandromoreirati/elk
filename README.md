@@ -41,6 +41,6 @@ Os pre-requisitos necessários para execução da stack de serviço:
    docker pull metricbeat:6.5.0
    
 # CLONANDO O REPOSITÓRIO E INICIANDO O SERVIÇO
-git clone https://github.com/leandromoreirati/elk.git
-cd elk
+git clone https://github.com/leandromoreirati/elk.git\
+cd elk\
 docker stack deploy -c docker-compose.yml elk
