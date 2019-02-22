@@ -2,7 +2,7 @@
 
 "ELK" é o acrônimo para três projetos de código aberto: Elasticsearch, Logstash e Kibana. O Elasticsearch é um mecanismo de pesquisa e análise. O Logstash é um pipeline de processamento de dados do lado do servidor que insere dados de várias fontes simultaneamente, os transforma e envia para um "stash", como o Elasticsearch. Kibana permite que os usuários visualizem dados com gráficos e tabelas no Elasticsearch
 
-# Serviços Que Compõem A Stack
+# SERVIÇOS
  - O Elasticsearch é um mecanismo distribuído de pesquisa e análise RESTful capaz de solucionar um número crescente de casos de uso. Como o coração do Elastic Stack, ele centraliza os dados armazenados para que você possa descobrir o esperado e descobrir o inesperado.
 Logstash:
  - O Logstash é um pipeline de processamento de dados de código-fonte aberto, que insere dados de várias fontes simultaneamente, transforma e envia para o seu "stash" .
