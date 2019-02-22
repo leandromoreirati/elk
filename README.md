@@ -1,9 +1,8 @@
-![alt tag](https://assets.zabbix.com/img/logo.svg)
+![alt tag](https://images.contentstack.io/v3/assets/bltefdd0b53724fa2ce/blt9a6279ac82c4aac5/5c11ebcf5b046c520d3f7506/logo-elastic-stack-lt.svg)
 
 "ELK" é o acrônimo para três projetos de código aberto: Elasticsearch, Logstash e Kibana. O Elasticsearch é um mecanismo de pesquisa e análise. O Logstash é um pipeline de processamento de dados do lado do servidor que insere dados de várias fontes simultaneamente, os transforma e envia para um "stash", como o Elasticsearch. Kibana permite que os usuários visualizem dados com gráficos e tabelas no Elasticsearch
 
 # Serviços Que Compõem A Stack
-Elasticsearch:
  - O Elasticsearch é um mecanismo distribuído de pesquisa e análise RESTful capaz de solucionar um número crescente de casos de uso. Como o coração do Elastic Stack, ele centraliza os dados armazenados para que você possa descobrir o esperado e descobrir o inesperado.
 Logstash:
  - O Logstash é um pipeline de processamento de dados de código-fonte aberto, que insere dados de várias fontes simultaneamente, transforma e envia para o seu "stash" .
@@ -17,7 +16,7 @@ Filebeat
 A stack de serviços e composta por um cluster do elasticsearch com 2 nos, além dos serviços do logstash, kibana, filebeat e metricbeat.
 
 # NOTAS DE VERSÃO
-°  Versão 1.0 - 01/02/2019 ==> Criação e configuração do composefile.\
+°  Versão 1.0 - 01/02/2019 ==> Criação e configuração do composefile.
 
 # PRÉ-REQUISITO
 Os pre-requisitos necessários para execução da stack de serviço:
@@ -42,6 +41,6 @@ Os pre-requisitos necessários para execução da stack de serviço:
    docker pull metricbeat:6.5.0
    
 # CLONANDO O REPOSITÓRIO E INICIANDO O SERVIÇO
-git clone XXXXX
-cd XXXX
+git clone https://github.com/leandromoreirati/elk.git
+cd elk
 docker stack deploy -c docker-compose.yml elk
