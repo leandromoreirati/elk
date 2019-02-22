@@ -1,0 +1,69 @@
+#-------------------------------- Autodiscovery -------------------------------
+metricbeat.autodiscover:
+  providers:
+    - type: docker
+      templates:
+        - condition.contains:
+            docker.container.image: redis
+          config:
+            - module: redis
+              metricsets: ["info", "keyspace"]
+              hosts: "${data.host}:${data.port}"
+
+metricbeat.modules:
+#------------------------------- System Module -------------------------------
+- module: system
+  metricsets: ["cpu", "load", "memory", "network", "process", "process_summary", "core", "diskio", "socket"]
+  processes: ['.*']
+  process.include_top_n:
+    by_cpu: 5
+    by_memory: 5
+  period: 10s
+  cpu.metrics:  ["percentages"]
+  core.metrics: ["percentages"]
+
+- module: system
+  period: 1m
+  metricsets:
+    - filesystem
+    - fsstat
+  processors:
+  - drop_event.when.regexp:
+      system.filesystem.mount_point: '^/(sys|cgroup|proc|dev|etc|host|lib)($|/)'
+
+- module: system
+  period: 15m
+  metricsets:
+    - uptime
+
+#------------------------------- Docker Module -------------------------------
+- module: docker
+  metricsets: ["container", "cpu", "diskio", "healthcheck", "info", "memory", "network"]
+  hosts: ["unix:///var/run/docker.sock"]
+  period: 10s
+
+#------------------------------- Processors -------------------------------
+processors:
+- add_docker_metadata: ~
+- add_cloud_metadata: ~
+- add_locale: ~
+
+#-------------------------- Elasticsearch output ------------------------------
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  #username: ${ELASTICSEARCH_USERNAME}
+  #password: ${ELASTICSEARCH_PASSWORD}
+
+xpack.monitoring:
+  enabled: true
+  elasticsearch:
+
+#============================== Dashboards =====================================
+# These settings control loading the sample dashboards to the Kibana index.
+# Loading the dashboards is disabled by default and can be enabled either by setting the options here, or by using the `-setup` CLI flag.
+setup.dashboards:
+  enabled: true
+setup.kibana:
+  host: "kibana:5601"
+  #username: ${ELASTICSEARCH_USERNAME}
+  #password: ${ELASTICSEARCH_PASSWORD}

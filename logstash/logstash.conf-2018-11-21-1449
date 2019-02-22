@@ -1,0 +1,20 @@
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  if [type] == "zabbix_agent_access" {
+    grok {
+      patterns_dir => "./patterns"
+        match => { "message" => "%{COMBINEDAPACHELOG}"}
+    }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://elasticsearch:9200"]
+  }
+}

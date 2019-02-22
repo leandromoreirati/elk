@@ -1,0 +1,259 @@
+version: "3.7"
+services:
+
+# ELASTICSEARCH CLUSTER NODE 1
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.0
+    hostname: elasticsearch
+    volumes:
+       - elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - cluster.name=elastic-cluster
+      #- bootstrap.memory_lock=true
+      #- "ES_JAVA_OPTS=-Xms6144m -Xmx6144m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    stdin_open: true
+    deploy:
+      #placement:
+       # constraints: [node.role == manager]
+      #replicas: 3
+      #resources:
+      #  limits:
+      #    memory: 2048M
+      #    cpus: '2'
+      #  reservations:
+      #    cpus: '1'
+      #    memory: 1024M
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "250m"
+        max-file: "3"
+    networks:
+      - backend
+
+# ELASTICSEARCH	CLUSTER NODE 2
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.0
+    hostname: elasticsearch2
+    depends_on:
+      - elasticsearch 
+    volumes:
+      - elasticsearch2:/usr/share/elasticsearch/data
+    environment:
+      - cluster.name=elastic-cluster
+      #- bootstrap.memory_lock=true
+      #- "ES_JAVA_OPTS=-Xms6144m -Xmx6144m"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch"
+    stdin_open: true
+    deploy:
+      #placement:
+       # constraints: [node.role == manager]
+      #replicas: 3
+      #resources:
+      #  limits:
+      #    memory: 2048M
+      #    cpus: '2'
+      #  reservations:
+      #    cpus: '1'
+      #    memory: 1024M
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "250m"
+    networks:
+      - backend
+
+# KIBANA
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.5.0
+    hostname: kibana
+    depends_on:
+      - elasticsearch
+    volumes:
+      - kibana:/usr/share/kibana/data
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - "XPACK_SECURITY_ENABLED=true"
+      - "ELASTICSEARCH_USERNAME=elastic"
+      - "ELASTICSEARCH_PASSWD=1qaz@WSX"
+      - XPACK_GRAPH_ENABLED=true
+      - XPACK_WATCHER_ENABLED=true
+      - XPACK_ML_ENABLED=true
+      - XPACK_MONITORING_ENABLED=true
+      - XPACK_MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED
+    ports:
+       - "5601:5601"
+    stdin_open: true
+    deploy:
+      #placement:
+       # constraints: [node.role == manager]
+      #replicas: 3
+      #resources:
+      #  limits:
+      #    memory: 2048M
+      #    cpus: '2'
+      #  reservations:
+      #    cpus: '1'
+      #    memory: 1024M
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "250m"
+        max-file: "3"
+    networks:
+      - backend
+
+# LOGSTASH
+  logstash:
+    image: docker.elastic.co/logstash/logstash:6.5.0
+    command: logstash -f /etc/logstash/conf.d/logstash.conf
+    hostname: logstash
+    depends_on:
+      - elasticsearch 
+      - kibana
+    volumes:
+      - ./logstash:/etc/logstash/conf.d
+      - ./logstash/patterns:/etc/logstash/conf.d/patterns
+      - ./configs/GeoLite2-City.mmdb:/etc/logstash/GeoLite2-City.mmdb
+    ports:
+       - "5044:5044"
+    #environment:
+      #- cluster.name=zabbix-elasticsearch
+      #- bootstrap.memory_lock=true
+      #- "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      #- "discovery.zen.ping.unicast.hosts=elasticsearch"
+      #- discovery.type=single-node
+      #- xpack.monitoring.elasticsearch.username: "elastic"
+      #- xpack.monitoring.elasticsearch.password: "1qaz@WSX"    
+    stdin_open: true
+    deploy:
+      #placement:
+       # constraints: [node.role == manager]
+      #replicas: 3
+      #resources:
+      #  limits:
+      #    memory: 2048M
+      #    cpus: '2'
+      #  reservations:
+      #    cpus: '1'
+      #    memory: 1024M
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "250m"
+        max-file: "3"
+    networks:
+      - backend
+
+# FILEBEAT
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:6.5.0
+    hostname: filebeat
+    command: ["--strict.perms=false"]
+    user: root
+    depends_on:
+      - kibana
+      - elasticsearch 
+    volumes:
+      - $PWD/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/log/:/var/log
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+      # Descomentar caso o modulo de auditoria seja habilitado
+      # - /var/log/audit/:/var/log/audit/:ro
+      # This is needed for filebeat to load jenkins build log path as specified in filebeat.yml
+      # - /var/lib/docker/volumes/jenkins_home/_data/jobs/:/var/lib/docker/volumes/jenkins_home/_data/jobs/:ro      
+    environment:
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - KIBANA_HOST=kibana:5601
+    stdin_open: true
+    deploy:
+      mode: global
+      #placement:
+       # constraints: [node.role == manager]
+      #replicas: 3
+      #resources:
+      #  limits:
+      #    memory: 2048M
+      #    cpus: '2'
+      #  reservations:
+      #    cpus: '1'
+      #    memory: 1024M
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "250m"
+        max-file: "3"
+    networks:
+      - backend
+
+# METRICBEAT
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:6.5.0
+    hostname: metricbeat
+    command: ["--strict.perms=false", "-system.hostfs=/hostfs"]
+    depends_on:
+      - elasticsearch
+      - kibana
+    user: root    
+    volumes:
+      - /proc:/hostfs/proc:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /:/hostfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - metricbeat:/usr/share/metricbeat/data
+      - $PWD/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml  
+    environment:
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - KIBANA_HOST=kibana:5601
+    stdin_open: true
+    deploy:
+      mode: global
+      #placement:
+       # constraints: [node.role == manager]
+      #replicas: 3
+      #resources:
+      #  limits:
+      #    memory: 2048M
+      #    cpus: '2'
+      #  reservations:
+      #    cpus: '1'
+      #    memory: 1024M
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "250m"
+        max-file: "3"
+    networks:
+      - backend
+
+# VOLUMES
+volumes:
+  elasticsearch:
+  elasticsearch2:
+  metricbeat:
+  elasticsearch:
+  kibana:
+ 
+# REDE
+networks:
+  backend:
+    driver: overlay
+
+  frontend:
+    driver: overlay
